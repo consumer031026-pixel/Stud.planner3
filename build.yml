@@ -1,0 +1,32 @@
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Arrange project folders
+        run: |
+          mkdir -p app/src/main/java/com/studentplanner/app app/src/main/assets
+          mv MainActivity.java ReminderReceiver.java app/src/main/java/com/studentplanner/app/
+          mv AndroidManifest.xml app/src/main/
+          mv index.html app/src/main/assets/
+          mv app-build.gradle app/build.gradle
+          mv proguard-rules.pro app/
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses > /dev/null || true
+      - name: Build debug APK
+        run: gradle assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StudentPlanner-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
